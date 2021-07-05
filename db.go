@@ -1,6 +1,8 @@
 package main
 
 import (
+	"strconv"
+
 	hel "github.com/hamza02x/go-helper"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
@@ -16,7 +18,8 @@ type Timing struct {
 }
 
 type Properties struct {
-	Version int `gorm:"column:version"`
+	Property string `gorm:"column:property"`
+	Value    string `gorm:"column:value"`
 }
 
 func (Timing) TableName() string     { return "timings" }
@@ -33,5 +36,5 @@ func setDB(path string) {
 	db.AutoMigrate(&Timing{})
 	db.AutoMigrate(&Properties{})
 
-	db.Create(&Properties{Version: DB_VERSION})
+	db.Create(&Properties{Property: "version", Value: strconv.Itoa(DB_VERSION)})
 }

@@ -68,5 +68,11 @@ func insertTimingRows(sura int) {
 		db.Create(&Timing{Sura: sura, Ayah: aya, Time: endTime})
 	}
 
-	db.Create(&Timing{Sura: sura, Ayah: 999, Time: getAudioLengthMS(getSuraFilePath(sura))})
+	lengthFullSura := getAudioLengthMS(getSuraFilePath(sura))
+
+	if endTime > lengthFullSura {
+		db.Save(&Timing{Sura: sura, Ayah: AYAH_COUNT[sura-1], Time: lengthFullSura})
+	}
+
+	db.Create(&Timing{Sura: sura, Ayah: 999, Time: lengthFullSura})
 }
