@@ -82,6 +82,7 @@ func validateVbvAudioDir() {
 	}
 
 	wg.Wait()
+	close(c)
 
 	hel.Pl("All input audio files seems valid, creating gapless")
 }

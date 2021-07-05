@@ -1,6 +1,7 @@
 package main
 
 import (
+	"os"
 	"path"
 	"sync"
 
@@ -39,6 +40,9 @@ func main() {
 	}
 
 	wg.Wait()
+	close(c)
+
+	os.RemoveAll(outBuildDir)
 }
 
 func concatSuraAudio(sura int) {
