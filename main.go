@@ -86,6 +86,9 @@ func moveTimingUnorderedToMain() {
 			db.Where("sura = ? and ayah = ?", sura, aya).First(&t)
 			db.Create(&Timing{Sura: t.Sura, Ayah: t.Ayah, Time: t.Time})
 		}
+		var t TimingUnordered
+		db.Where("sura = ? and ayah = ?", sura, 999).First(&t)
+		db.Create(&Timing{Sura: t.Sura, Ayah: t.Ayah, Time: t.Time})
 	}
 
 	db.Exec("drop table " + TimingUnordered{}.TableName())
