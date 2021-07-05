@@ -3,6 +3,7 @@ package main
 import (
 	"os"
 	"path"
+	"strconv"
 	"sync"
 
 	col "github.com/hamza02x/go-color"
@@ -10,12 +11,13 @@ import (
 )
 
 var (
-	vbvAudioDir string // flag
-	outDir      string // flag
-	name        string // flag
-	outBuildDir string // outDir + "/build"
-	outSuraDir  string // outDir + "/sura"
-	thread      int    // flag
+	vbvAudioDir  string // flag
+	outDir       string // flag
+	name         string // flag
+	outBuildDir  string // outDir + "/build"
+	outSuraDir   string // outDir + "/sura"
+	thread       int    // flag
+	createdCount int
 )
 
 func main() {
@@ -48,9 +50,11 @@ func main() {
 func concatSuraAudio(sura int) {
 	outSuraFile := getSuraFilePath(sura)
 
-	hel.Pl("Creating: " + col.Red(outSuraFile))
+	hel.Pl("🔪 Creating: " + col.Red(outSuraFile))
 	execute("ffmpeg", "-f concat -safe 0 -i "+getFfmpegConcatFile(sura)+" "+outSuraFile+" -v quiet -y")
-	hel.Pl("Created: " + col.Green(outSuraFile))
+	hel.Pl("✅ " + strconv.Itoa(createdCount) + ". Created: " + col.Green(outSuraFile))
+
+	createdCount++
 }
 
 func insertTimingRows(sura int) {
