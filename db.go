@@ -11,19 +11,22 @@ import (
 var db *gorm.DB
 var errDB error
 
+type TimingUnordered Timing
+
 type Timing struct {
-	Sura int   `gorm:"column:sura"`
-	Ayah int   `gorm:"column:ayah"`
+	Sura int   `gorm:"column:sura;primaryKey"`
+	Ayah int   `gorm:"column:ayah;primaryKey"`
 	Time int64 `gorm:"column:time"`
 }
 
 type Properties struct {
-	Property string `gorm:"column:property"`
+	Property string `gorm:"column:property;primaryKey"`
 	Value    string `gorm:"column:value"`
 }
 
-func (Timing) TableName() string     { return "timings" }
-func (Properties) TableName() string { return "properties" }
+func (Timing) TableName() string          { return "timings" }
+func (TimingUnordered) TableName() string { return "timings_unordered" }
+func (Properties) TableName() string      { return "properties" }
 
 func setDB(path string) {
 
@@ -33,6 +36,7 @@ func setDB(path string) {
 
 	panics("Error opening database!", errDB)
 
+	db.AutoMigrate(&TimingUnordered{})
 	db.AutoMigrate(&Timing{})
 	db.AutoMigrate(&Properties{})
 

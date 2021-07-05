@@ -10,14 +10,12 @@ import (
 )
 
 var (
-	vbvAudioDir     string               // flag
-	outDir          string               // flag
-	name            string               // flag
-	outBuildDir     string               // outDir + "/build"
-	outSuraDir      string               // outDir + "/sura"
-	thread          int                  // flag
-	vbvAyaLengths   = [TOTAL_AYA]int64{} // key/index: ayaId-1
-	lengthBismillah int64
+	vbvAudioDir string // flag
+	outDir      string // flag
+	name        string // flag
+	outBuildDir string // outDir + "/build"
+	outSuraDir  string // outDir + "/sura"
+	thread      int    // flag
 )
 
 func main() {
@@ -42,6 +40,8 @@ func main() {
 	wg.Wait()
 	close(c)
 
+	moveTimingUnorderedToMain()
+
 	os.RemoveAll(outBuildDir)
 }
 
@@ -58,21 +58,36 @@ func insertTimingRows(sura int) {
 	var endTime int64 = 0
 
 	if sura != SURA_FATIHA && sura != SURA_TAWBA {
-		endTime = lengthBismillah
+		// bismillah
+		endTime = getAudioLengthMS(getAyaFilePath(SURA_FATIHA, 1))
 	}
 
 	for aya := 1; aya <= AYAH_COUNT[sura-1]; aya++ {
 
-		endTime += vbvAyaLengths[getAyaIndex(sura, aya)]
+		endTime += getAudioLengthMS(getAyaFilePath(sura, aya))
 
-		db.Create(&Timing{Sura: sura, Ayah: aya, Time: endTime})
+		db.Create(&TimingUnordered{Sura: sura, Ayah: aya, Time: endTime})
 	}
 
 	lengthFullSura := getAudioLengthMS(getSuraFilePath(sura))
 
 	if endTime > lengthFullSura {
-		db.Save(&Timing{Sura: sura, Ayah: AYAH_COUNT[sura-1], Time: lengthFullSura})
+		db.Save(&TimingUnordered{Sura: sura, Ayah: AYAH_COUNT[sura-1], Time: lengthFullSura})
 	}
 
-	db.Create(&Timing{Sura: sura, Ayah: 999, Time: lengthFullSura})
+	db.Create(&TimingUnordered{Sura: sura, Ayah: 999, Time: lengthFullSura})
+}
+
+func moveTimingUnorderedToMain() {
+
+	for sura := 1; sura <= TOTAL_SURA; sura++ {
+		for aya := 1; aya <= AYAH_COUNT[sura-1]; aya++ {
+			var t TimingUnordered
+			db.Where("sura = ? and ayah = ?", sura, aya).First(&t)
+			db.Create(&Timing{Sura: t.Sura, Ayah: t.Ayah, Time: t.Time})
+		}
+	}
+
+	db.Exec("drop table " + TimingUnordered{}.TableName())
+	db.Exec("VACUUM")
 }

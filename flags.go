@@ -88,21 +88,9 @@ func validateVbvAudioDir() {
 }
 
 func validateAyaFile(sura int, aya int) {
-
-	fileName := getSuraAyaFileName(sura, aya)
-	ayaFilePath := getAyaFilePath(sura, aya)
-
-	if !hel.FileExists(ayaFilePath) {
-		panic("Audio file `" + fileName + "` doesn't exist")
+	if !hel.FileExists(getAyaFilePath(sura, aya)) {
+		panic("Audio file `" + getSuraAyaFileName(sura, aya) + "` doesn't exist")
 	}
-
-	timeMS := getAudioLengthMS(ayaFilePath)
-
-	if sura == SURA_FATIHA && aya == 1 {
-		lengthBismillah = timeMS
-	}
-
-	vbvAyaLengths[getAyaIndex(sura, aya)] = timeMS
 }
 
 func getAyaFilePath(sura int, aya int) string {
