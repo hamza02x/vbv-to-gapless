@@ -15,7 +15,7 @@ go get -u -v github.com/hamza02x/vbv-to-gapless
 ```
 Usage of ./vbv-to-gapless:
   -n string
-    	database name (required)
+    	database name (required) (ex: husary)
   -o string
     	output directory path (required)
   -t int

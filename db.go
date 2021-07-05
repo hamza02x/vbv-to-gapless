@@ -33,5 +33,5 @@ func setDB(path string) {
 	db.AutoMigrate(&Timing{})
 	db.AutoMigrate(&Properties{})
 
-	db.Save(&Properties{Version: DB_VERSION})
+	db.Create(&Properties{Version: DB_VERSION})
 }

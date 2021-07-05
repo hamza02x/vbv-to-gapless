@@ -14,7 +14,7 @@ import (
 func handleFlags() {
 
 	flag.StringVar(&vbvAudioDir, "vd", "", "verse by verse audio directory (required)")
-	flag.StringVar(&name, "n", "", "database name (required)")
+	flag.StringVar(&name, "n", "", "database name (required) (ex: husary)")
 	flag.StringVar(&outDir, "o", "", "output directory path (required)")
 	flag.IntVar(&thread, "t", 10, "number of threads")
 

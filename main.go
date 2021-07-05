@@ -23,7 +23,7 @@ var (
 func main() {
 
 	handleFlags()
-	setDB(path.Join(outDir, name))
+	setDB(path.Join(outDir, name+".db"))
 
 	var wg sync.WaitGroup
 	var c = make(chan int, thread)
@@ -65,8 +65,8 @@ func insertTimingRows(sura int) {
 
 		endTime += vbvAyaLengths[getAyaIndex(sura, aya)]
 
-		db.Save(&Timing{Sura: sura, Ayah: aya, Time: endTime})
+		db.Create(&Timing{Sura: sura, Ayah: aya, Time: endTime})
 	}
 
-	db.Save(&Timing{Sura: sura, Ayah: 999, Time: getAudioLengthMS(getSuraFilePath(sura))})
+	db.Create(&Timing{Sura: sura, Ayah: 999, Time: getAudioLengthMS(getSuraFilePath(sura))})
 }
