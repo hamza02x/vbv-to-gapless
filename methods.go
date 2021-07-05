@@ -2,6 +2,7 @@ package main
 
 import (
 	"os/exec"
+	"path"
 	"strconv"
 	"strings"
 
@@ -27,7 +28,7 @@ func getPartName(suraOrAya int) string {
 }
 
 // ffprobe -i 001001.mp3 -show_entries format=duration -v quiet -of csv="p=0"
-func getAudioLength(path string) float64 {
+func getAudioLengthMS(path string) int64 {
 
 	dur, err := strconv.ParseFloat(trimSpaces(execute(
 		"ffprobe", "-i "+path+" -show_entries format=duration -v quiet -of csv=p=0",
@@ -35,7 +36,7 @@ func getAudioLength(path string) float64 {
 
 	panics("error in ParseFloat ", err)
 
-	return dur
+	return int64(dur * 1000)
 }
 
 func execute(comm string, arg string) string {
@@ -61,10 +62,14 @@ func trimSpaces(str string) string {
 	return strings.ReplaceAll(strings.TrimSpace(str), " ", "")
 }
 
-func getFileName(sura int, aya int) string {
+func getSuraAyaFileName(sura int, aya int) string {
 	return getPartName(sura) + getPartName(aya) + ".mp3"
 }
 
-func inRange(val, min, max int) bool {
-	return val >= min && val <= max
+func getAyaIndex(sura, aya int) int {
+	return (AYA_ID_START[sura-1] + (aya - 1)) - 1
+}
+
+func getSuraFilePath(sura int) string {
+	return path.Join(outSuraDir, getPartName(sura)+".mp3")
 }

@@ -1,5 +1,8 @@
 package main
 
+const DB_VERSION = 4
+const SURA_FATIHA = 1
+const SURA_TAWBA = 9
 const TOTAL_SURA = 114
 const TOTAL_AYA = 6236
 
