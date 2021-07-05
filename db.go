@@ -11,8 +11,6 @@ import (
 var db *gorm.DB
 var errDB error
 
-type TimingUnordered Timing
-
 type Timing struct {
 	Sura int   `gorm:"column:sura;primaryKey"`
 	Ayah int   `gorm:"column:ayah;primaryKey"`
@@ -24,9 +22,8 @@ type Properties struct {
 	Value    string `gorm:"column:value"`
 }
 
-func (Timing) TableName() string          { return "timings" }
-func (TimingUnordered) TableName() string { return "timings_unordered" }
-func (Properties) TableName() string      { return "properties" }
+func (Timing) TableName() string     { return "timings" }
+func (Properties) TableName() string { return "properties" }
 
 func setDB(path string) {
 
@@ -36,9 +33,27 @@ func setDB(path string) {
 
 	panics("Error opening database!", errDB)
 
-	db.AutoMigrate(&TimingUnordered{})
 	db.AutoMigrate(&Timing{})
 	db.AutoMigrate(&Properties{})
 
 	db.Create(&Properties{Property: "version", Value: strconv.Itoa(DB_VERSION)})
+
+	for sura := 1; sura <= TOTAL_SURA; sura++ {
+		for aya := 1; aya <= AYAH_COUNT[sura-1]; aya++ {
+			dbCreateOrSave(sura, aya, 0, true)
+		}
+		dbCreateOrSave(sura, 999, 0, true)
+	}
+}
+
+func dbCreateOrSave(sura, aya int, time int64, isCreate bool) {
+	if isCreate {
+		db.Create(&Timing{Sura: sura, Ayah: aya, Time: time})
+	} else {
+		db.Save(&Timing{Sura: sura, Ayah: aya, Time: time})
+	}
+}
+
+func dbVaccum() {
+	db.Exec("VACUUM")
 }

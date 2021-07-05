@@ -42,7 +42,7 @@ func main() {
 	wg.Wait()
 	close(c)
 
-	moveTimingUnorderedToMain()
+	dbVaccum()
 
 	os.RemoveAll(outBuildDir)
 }
@@ -52,49 +52,24 @@ func concatSuraAudio(sura int) {
 
 	hel.Pl("🔪 Creating: " + col.Red(outSuraFile))
 	execute("ffmpeg", "-f concat -safe 0 -i "+getFfmpegConcatFile(sura)+" "+outSuraFile+" -v quiet -y")
-	hel.Pl("✅ " + strconv.Itoa(createdCount) + ". Created: " + col.Green(outSuraFile))
+	hel.Pl("✅ " + strconv.Itoa(createdCount+1) + ". Created: " + col.Green(outSuraFile))
 
 	createdCount++
 }
 
 func insertTimingRows(sura int) {
 
-	var endTime int64 = 0
+	var startTime int64 = 0
 
 	if sura != SURA_FATIHA && sura != SURA_TAWBA {
 		// bismillah
-		endTime = getAudioLengthMS(getAyaFilePath(SURA_FATIHA, 1))
+		startTime = getAudioLengthMS(getAyaFilePath(SURA_FATIHA, 1))
 	}
 
 	for aya := 1; aya <= AYAH_COUNT[sura-1]; aya++ {
-
-		endTime += getAudioLengthMS(getAyaFilePath(sura, aya))
-
-		db.Create(&TimingUnordered{Sura: sura, Ayah: aya, Time: endTime})
+		dbCreateOrSave(sura, aya, startTime, false)
+		startTime += getAudioLengthMS(getAyaFilePath(sura, aya))
 	}
 
-	lengthFullSura := getAudioLengthMS(getSuraFilePath(sura))
-
-	if endTime > lengthFullSura {
-		db.Save(&TimingUnordered{Sura: sura, Ayah: AYAH_COUNT[sura-1], Time: lengthFullSura})
-	}
-
-	db.Create(&TimingUnordered{Sura: sura, Ayah: 999, Time: lengthFullSura})
-}
-
-func moveTimingUnorderedToMain() {
-
-	for sura := 1; sura <= TOTAL_SURA; sura++ {
-		for aya := 1; aya <= AYAH_COUNT[sura-1]; aya++ {
-			var t TimingUnordered
-			db.Where("sura = ? and ayah = ?", sura, aya).First(&t)
-			db.Create(&Timing{Sura: t.Sura, Ayah: t.Ayah, Time: t.Time})
-		}
-		var t TimingUnordered
-		db.Where("sura = ? and ayah = ?", sura, 999).First(&t)
-		db.Create(&Timing{Sura: t.Sura, Ayah: t.Ayah, Time: t.Time})
-	}
-
-	db.Exec("drop table " + TimingUnordered{}.TableName())
-	db.Exec("VACUUM")
+	dbCreateOrSave(sura, 999, getAudioLengthMS(getSuraFilePath(sura)), false)
 }

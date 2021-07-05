@@ -30,6 +30,8 @@ func handleFlags() {
 	outBuildDir = outDir + "/build"
 	outSuraDir = outDir + "/sura"
 
+	os.RemoveAll(outBuildDir)
+
 	panics("Error creating outDir", hel.DirCreateIfNotExists(outDir))
 	panics("Error creating outBuildDir", hel.DirCreateIfNotExists(outBuildDir))
 	panics("Error creating outSuraDir", hel.DirCreateIfNotExists(outSuraDir))
