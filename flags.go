@@ -3,7 +3,6 @@ package main
 import (
 	"flag"
 	"os"
-	"path"
 	"strconv"
 	"sync"
 	"time"
@@ -28,9 +27,10 @@ func handleFlags() {
 	name = slugify(name)
 
 	dirOut = getAbs(dirOut)
-	dirOutBuild = path.Join(getAbs(dirOutBuild), "build")
-	dirOutSura = path.Join(getAbs(dirOutSura), name)
 	dirVbvAudio = getAbs(dirVbvAudio)
+
+	dirOutBuild = getAbs(dirOut + "/build")
+	dirOutSura = getAbs(dirOut + "/" + name)
 
 	os.RemoveAll(dirOutBuild)
 
