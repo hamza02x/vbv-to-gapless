@@ -11,11 +11,11 @@ import (
 )
 
 var (
-	vbvAudioDir  string // flag
-	outDir       string // flag
 	name         string // flag
-	outBuildDir  string // outDir + "/build"
-	outSuraDir   string // outDir + "/sura"
+	dirVbvAudio  string // flag
+	dirOut       string // flag
+	dirOutBuild  string // dirOut + "/build"
+	dirOutSura   string // dirOut + "/$name"
 	thread       int    // flag
 	createdCount int
 )
@@ -23,7 +23,7 @@ var (
 func main() {
 
 	handleFlags()
-	setDB(path.Join(outDir, name+".db"))
+	setDB(path.Join(dirOut, name+".db"))
 
 	var wg sync.WaitGroup
 	var c = make(chan int, thread)
@@ -44,14 +44,14 @@ func main() {
 
 	dbVaccum()
 
-	os.RemoveAll(outBuildDir)
+	os.RemoveAll(dirOutBuild)
 }
 
 func concatSuraAudio(sura int) {
-	outSuraFile := getSuraFilePath(sura)
+	outSuraFile := getGaplessSuraFilePath(sura)
 
 	hel.Pl("🔪 Creating: " + col.Red(outSuraFile))
-	execute("ffmpeg", "-f concat -safe 0 -i "+getFfmpegConcatFile(sura)+" "+outSuraFile+" -v quiet -y")
+	execute("ffmpeg", "-f concat -safe 0 -i "+getFfmpegConcatFilePath(sura)+" "+outSuraFile+" -v quiet -y")
 	hel.Pl("✅ " + strconv.Itoa(createdCount+1) + ". Created: " + col.Green(outSuraFile))
 
 	createdCount++
@@ -63,13 +63,13 @@ func insertTimingRows(sura int) {
 
 	if sura != SURA_FATIHA && sura != SURA_TAWBA {
 		// bismillah
-		startTime = getAudioLengthMS(getAyaFilePath(SURA_FATIHA, 1))
+		startTime = getAudioLengthMS(getVbvAyaFilePath(SURA_FATIHA, 1))
 	}
 
 	for aya := 1; aya <= AYAH_COUNT[sura-1]; aya++ {
-		dbCreateOrSave(sura, aya, startTime, false)
-		startTime += getAudioLengthMS(getAyaFilePath(sura, aya))
+		dbUpdateTiming(sura, aya, startTime)
+		startTime += getAudioLengthMS(getVbvAyaFilePath(sura, aya))
 	}
 
-	dbCreateOrSave(sura, 999, getAudioLengthMS(getSuraFilePath(sura)), false)
+	dbUpdateTiming(sura, 999, getAudioLengthMS(getGaplessSuraFilePath(sura)))
 }

@@ -36,6 +36,6 @@ vbv-to-gapless -t 10 -n hudhaify -vd ~/Downloads/dbs/hudhaify/ -o ~/Downloads/db
 # Output File/Folder structure
 
 
-- `o/sura/<001...114.mp3>` # gapless audio files
+- `o/$name/<001...114.mp3>` # gapless audio files
 - `o/build/<001...114.txt>` # temporary build files
-- `o/name.db` # database timing file
+- `o/$name.db` # database timing file

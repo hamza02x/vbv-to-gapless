@@ -3,10 +3,16 @@ package main
 import (
 	"os/exec"
 	"path"
+	"path/filepath"
+	"regexp"
 	"strconv"
 	"strings"
 
 	hel "github.com/hamza02x/go-helper"
+)
+
+var (
+	regexSlugify = regexp.MustCompile("[^a-z0-9]+")
 )
 
 // 1   => 001
@@ -62,14 +68,28 @@ func trimSpaces(str string) string {
 	return strings.ReplaceAll(strings.TrimSpace(str), " ", "")
 }
 
-func getSuraAyaFileName(sura int, aya int) string {
+func getVbvAyaFileName(sura int, aya int) string {
 	return getPartName(sura) + getPartName(aya) + ".mp3"
 }
 
-func getAyaIndex(sura, aya int) int {
-	return (AYA_ID_START[sura-1] + (aya - 1)) - 1
+func getVbvAyaFilePath(sura int, aya int) string {
+	return path.Join(dirVbvAudio, getVbvAyaFileName(sura, aya))
 }
 
-func getSuraFilePath(sura int) string {
-	return path.Join(outSuraDir, getPartName(sura)+".mp3")
+func getGaplessSuraFilePath(sura int) string {
+	return path.Join(dirOutSura, getPartName(sura)+".mp3")
+}
+
+func slugify(s string) string {
+	return strings.Trim(regexSlugify.ReplaceAllString(strings.ToLower(s), "-"), "-")
+}
+
+func getFfmpegConcatFilePath(sura int) string {
+	return dirOutBuild + "/" + getPartName(sura) + ".txt"
+}
+
+func getAbs(path string) string {
+	abs, err := filepath.Abs(path)
+	panics("Error in getting absolute path of "+path, err)
+	return abs
 }

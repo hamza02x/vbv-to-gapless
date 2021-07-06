@@ -40,20 +40,19 @@ func setDB(path string) {
 
 	for sura := 1; sura <= TOTAL_SURA; sura++ {
 		for aya := 1; aya <= AYAH_COUNT[sura-1]; aya++ {
-			dbCreateOrSave(sura, aya, 0, true)
+			dbCreateTiming(sura, aya, 0)
 		}
-		dbCreateOrSave(sura, 999, 0, true)
+		dbCreateTiming(sura, 999, 0)
 	}
 }
 
-func dbCreateOrSave(sura, aya int, time int64, isCreate bool) {
-	if isCreate {
-		db.Create(&Timing{Sura: sura, Ayah: aya, Time: time})
-	} else {
-		db.Save(&Timing{Sura: sura, Ayah: aya, Time: time})
-	}
+func dbCreateTiming(sura, aya int, time int64) {
+	db.Create(&Timing{Sura: sura, Ayah: aya, Time: time})
 }
 
+func dbUpdateTiming(sura, aya int, time int64) {
+	db.Save(&Timing{Sura: sura, Ayah: aya, Time: time})
+}
 func dbVaccum() {
 	db.Exec("VACUUM")
 }
