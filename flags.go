@@ -7,8 +7,8 @@ import (
 	"sync"
 	"time"
 
-	col "github.com/hamza02x/go-color"
-	hel "github.com/hamza02x/go-helper"
+	col "github.com/hamza72x/go-color"
+	hel "github.com/hamza72x/go-helper"
 )
 
 func handleFlags() {

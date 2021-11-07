@@ -3,7 +3,7 @@ package main
 import (
 	"strconv"
 
-	hel "github.com/hamza02x/go-helper"
+	hel "github.com/hamza72x/go-helper"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 )
