@@ -17,6 +17,7 @@ func handleFlags() {
 	flag.StringVar(&name, "n", "", "database name (required) (ex: husary)")
 	flag.StringVar(&dirOut, "o", "", "output directory path (required)")
 	flag.IntVar(&thread, "t", 10, "number of threads")
+	flag.BoolVar(&isVbvAyaFileInSuraDir, "visd", false, "is vbv file in their sura directory?")
 
 	flag.Parse()
 

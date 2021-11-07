@@ -11,13 +11,14 @@ import (
 )
 
 var (
-	name         string // flag
-	dirVbvAudio  string // flag
-	dirOut       string // flag
-	dirOutBuild  string // dirOut + "/build"
-	dirOutSura   string // dirOut + "/$name"
-	thread       int    // flag
-	createdCount int
+	name                  string // flag
+	dirVbvAudio           string // flag
+	dirOut                string // flag
+	dirOutBuild           string // dirOut + "/build"
+	dirOutSura            string // dirOut + "/$name"
+	thread                int    // flag
+	isVbvAyaFileInSuraDir bool   // flag
+	createdCount          int
 )
 
 func main() {

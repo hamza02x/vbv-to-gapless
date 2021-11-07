@@ -73,7 +73,7 @@ func getVbvAyaFileName(sura int, aya int) string {
 }
 
 func getVbvAyaFilePath(sura int, aya int) string {
-	return path.Join(dirVbvAudio, getVbvAyaFileName(sura, aya))
+	return path.Join(getSuraDir(sura), getVbvAyaFileName(sura, aya))
 }
 
 func getGaplessSuraFilePath(sura int) string {
@@ -92,4 +92,11 @@ func getAbs(path string) string {
 	abs, err := filepath.Abs(path)
 	panics("Error in getting absolute path of "+path, err)
 	return abs
+}
+
+func getSuraDir(sura int) string {
+	if isVbvAyaFileInSuraDir {
+		return path.Join(dirVbvAudio, strconv.Itoa(sura))
+	}
+	return dirVbvAudio
 }
