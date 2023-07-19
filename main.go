@@ -52,12 +52,12 @@ func main() {
 
 func concatSuraAudio(sura int) {
 	outMp3File := getGaplessMp3SuraFilePath(sura)
-	contactFile := getFfmpegConcatFilePath(sura)
+	concatFile := getFfmpegConcatFilePath(sura)
 
 	hel.Pl("🔪 Creating: " + col.Red(outMp3File))
 	execute("ffmpeg", fmt.Sprintf(
 		"-f concat -safe 0 -i %s %s -v quiet -y",
-		contactFile, outMp3File,
+		concatFile, outMp3File,
 	))
 	hel.Pl("✅ " + strconv.Itoa(createdCount+1) + ". Created: " + col.Green(outMp3File))
 
