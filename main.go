@@ -66,7 +66,7 @@ func concatSuraAudio(sura int) {
 
 	hel.Pl("🔪 Creating: " + col.Red(outOpusFile))
 	execute("ffmpeg", fmt.Sprintf(
-		"-i %s -c:a libopus -b:a 16k -vbr on -compression_level 10 -frame_duration 60 -application audio -v quiet -y %s",
+		"-i %s -c:a libopus -vbr on -compression_level 10 -frame_duration 60 -application audio -v quiet -y %s",
 		outMp3File,
 		outOpusFile,
 	))
