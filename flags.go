@@ -2,6 +2,7 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"os"
 	"strconv"
 	"sync"
@@ -17,7 +18,7 @@ func handleFlags() {
 	flag.StringVar(&name, "n", "", "database name (required) (ex: husary)")
 	flag.StringVar(&dirOut, "o", "", "output directory path (required)")
 	flag.IntVar(&thread, "t", 10, "number of threads")
-	flag.BoolVar(&isVbvAyaFileInSuraDir, "visd", false, "is vbv file in their sura directory?")
+	flag.BoolVar(&isVbvAyaFileInSuraDir, "visd", false, "is vbv file in their sura directory? (default false); ex: 2/002001.mp3")
 
 	flag.Parse()
 
@@ -44,7 +45,6 @@ func handleFlags() {
 
 	time.Sleep(1 * time.Second)
 
-	validatedirVbvAudio()
 }
 
 func flagExit() {
@@ -52,7 +52,10 @@ func flagExit() {
 	os.Exit(1)
 }
 
-func validatedirVbvAudio() {
+// getSuras get all suras and validate them
+func getSuras() []int {
+
+	suras := []int{}
 
 	if !hel.PathExists(dirVbvAudio) {
 		panic("directory `" + dirVbvAudio + "` doesn't exist")
@@ -66,14 +69,26 @@ func validatedirVbvAudio() {
 
 		ffmpegConcatData := ""
 
-		// contain bismillah in every other sura
-		if sura != SURA_FATIHA && sura != SURA_TAWBA {
-			ffmpegConcatData = "file '" + getVbvAyaFilePath(SURA_FATIHA, 1) + "'\n"
+		dirSura := getSuraDir(sura)
+
+		// skip a sura if it's directory doesn't exist
+		if !isDirExists(dirSura) {
+			fmt.Printf("sura directory `%s` doesn't exist; skipping\n", dirSura)
+			continue
 		}
+
+		// skip a sura if it's incomplete
+		isSuraIncomplete := false
 
 		for aya := 1; aya <= AYAH_COUNT[sura-1]; aya++ {
 
-			ffmpegConcatData += "file '" + getVbvAyaFilePath(sura, aya) + "'\n"
+			vbvAyaPath := getVbvAyaFilePath(sura, aya)
+			if !hel.FileExists(vbvAyaPath) {
+				isSuraIncomplete = true
+				break
+			}
+
+			ffmpegConcatData += fmt.Sprintf("file '%s'\n", vbvAyaPath)
 
 			wg.Add(1)
 			go func(sura int, aya int) {
@@ -88,6 +103,13 @@ func validatedirVbvAudio() {
 			}(sura, aya)
 		}
 
+		// skip a sura if it's incomplete
+		if isSuraIncomplete {
+			fmt.Printf("sura `%d` is incomplete; skipping\n", sura)
+			continue
+		}
+
+		suras = append(suras, sura)
 		panics("Error creating contact data file", hel.StrToFile(getFfmpegConcatFilePath(sura), ffmpegConcatData))
 	}
 
@@ -95,6 +117,8 @@ func validatedirVbvAudio() {
 	close(c)
 
 	hel.Pl("All input audio files seems valid, creating gapless")
+
+	return suras
 }
 
 func validateAyaFile(sura int, aya int) {

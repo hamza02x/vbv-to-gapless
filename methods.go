@@ -1,6 +1,7 @@
 package main
 
 import (
+	"os"
 	"os/exec"
 	"path"
 	"path/filepath"
@@ -76,8 +77,12 @@ func getVbvAyaFilePath(sura int, aya int) string {
 	return path.Join(getSuraDir(sura), getVbvAyaFileName(sura, aya))
 }
 
-func getGaplessSuraFilePath(sura int) string {
+func getGaplessMp3SuraFilePath(sura int) string {
 	return path.Join(dirOutSura, getPartName(sura)+".mp3")
+}
+
+func getGaplessOpusSuraFilePath(sura int) string {
+	return path.Join(dirOutSura, getPartName(sura)+".opus")
 }
 
 func slugify(s string) string {
@@ -99,4 +104,12 @@ func getSuraDir(sura int) string {
 		return path.Join(dirVbvAudio, strconv.Itoa(sura))
 	}
 	return dirVbvAudio
+}
+
+func isDirExists(path string) bool {
+	info, err := os.Stat(path)
+	if os.IsNotExist(err) {
+		return false
+	}
+	return info.IsDir()
 }

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"os"
 	"path"
 	"strconv"
@@ -24,12 +25,13 @@ var (
 func main() {
 
 	handleFlags()
+	suras := getSuras()
 	setDB(path.Join(dirOut, name+".db"))
 
 	var wg sync.WaitGroup
 	var c = make(chan int, thread)
 
-	for sura := 1; sura <= TOTAL_SURA; sura++ {
+	for _, sura := range suras {
 		wg.Add(1)
 		go func(sura int) {
 			c <- sura
@@ -49,11 +51,26 @@ func main() {
 }
 
 func concatSuraAudio(sura int) {
-	outSuraFile := getGaplessSuraFilePath(sura)
+	outMp3File := getGaplessMp3SuraFilePath(sura)
+	contactFile := getFfmpegConcatFilePath(sura)
 
-	hel.Pl("🔪 Creating: " + col.Red(outSuraFile))
-	execute("ffmpeg", "-f concat -safe 0 -i "+getFfmpegConcatFilePath(sura)+" "+outSuraFile+" -v quiet -y")
-	hel.Pl("✅ " + strconv.Itoa(createdCount+1) + ". Created: " + col.Green(outSuraFile))
+	hel.Pl("🔪 Creating: " + col.Red(outMp3File))
+	execute("ffmpeg", fmt.Sprintf(
+		"-f concat -safe 0 -i %s %s -v quiet -y",
+		contactFile, outMp3File,
+	))
+	hel.Pl("✅ " + strconv.Itoa(createdCount+1) + ". Created: " + col.Green(outMp3File))
+
+	// also create opus version
+	outOpusFile := getGaplessOpusSuraFilePath(sura)
+
+	hel.Pl("🔪 Creating: " + col.Red(outOpusFile))
+	execute("ffmpeg", fmt.Sprintf(
+		"-i %s -c:a libopus -b:a 16k -vbr on -compression_level 10 -frame_duration 60 -application audio -v quiet -y %s",
+		outMp3File,
+		outOpusFile,
+	))
+	hel.Pl("✅ " + strconv.Itoa(createdCount+1) + ". Created: " + col.Green(outOpusFile))
 
 	createdCount++
 }
@@ -72,5 +89,5 @@ func insertTimingRows(sura int) {
 		startTime += getAudioLengthMS(getVbvAyaFilePath(sura, aya))
 	}
 
-	dbUpdateTiming(sura, 999, getAudioLengthMS(getGaplessSuraFilePath(sura)))
+	dbUpdateTiming(sura, 999, getAudioLengthMS(getGaplessMp3SuraFilePath(sura)))
 }
