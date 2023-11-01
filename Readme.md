@@ -7,7 +7,7 @@
 # Install
 
 ```bash
-go get -u -v github.com/hamza72x/vbv-to-gapless
+go install github.com/hamza72x/vbv-to-gapless@latest
 ```
 
 # Usage

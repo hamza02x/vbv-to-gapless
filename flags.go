@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	"log"
 	"os"
 	"strconv"
 	"sync"
@@ -12,7 +13,7 @@ import (
 	hel "github.com/hamza72x/go-helper"
 )
 
-func handleFlags() {
+func handleFlags() error {
 
 	flag.StringVar(&dirVbvAudio, "vd", "", "verse by verse audio directory (required)")
 	flag.StringVar(&name, "n", "", "database name (required) (ex: husary)")
@@ -28,23 +29,46 @@ func handleFlags() {
 
 	name = slugify(name)
 
-	dirOut = getAbs(dirOut)
-	dirVbvAudio = getAbs(dirVbvAudio)
+	var err error
+	dirOut, err = getAbs(dirOut)
+	if err != nil {
+		return err
+	}
 
-	dirOutBuild = getAbs(dirOut + "/build")
-	dirOutSura = getAbs(dirOut + "/" + name)
+	dirVbvAudio, err = getAbs(dirVbvAudio)
+	if err != nil {
+		return err
+	}
 
-	os.RemoveAll(dirOutBuild)
+	dirOutBuild, err = getAbs(dirOut + "/build")
+	if err != nil {
+		return err
+	}
 
-	panics("Error creating dirOut", hel.DirCreateIfNotExists(dirOut))
-	panics("Error creating dirOutBuild", hel.DirCreateIfNotExists(dirOutBuild))
-	panics("Error creating dirOutSura", hel.DirCreateIfNotExists(dirOutSura))
+	dirOutSura, err = getAbs(dirOut + "/" + name)
+	if err != nil {
+		return err
+	}
+
+	if err := os.RemoveAll(dirOutBuild); err != nil {
+		return err
+	}
+	if err := hel.DirCreateIfNotExists(dirOut); err != nil {
+		return err
+	}
+	if err := hel.DirCreateIfNotExists(dirOutBuild); err != nil {
+		return err
+	}
+	if err := hel.DirCreateIfNotExists(dirOutSura); err != nil {
+		return err
+	}
 
 	hel.Pl("verse by verse audio directory: ", col.Yellow(dirVbvAudio))
 	hel.Pl("output directory: ", col.Red(dirOut))
 
 	time.Sleep(1 * time.Second)
 
+	return err
 }
 
 func flagExit() {
@@ -53,7 +77,7 @@ func flagExit() {
 }
 
 // getSuras get all suras and validate them
-func getSuras() []int {
+func getSuras() ([]int, error) {
 
 	suras := []int{}
 
@@ -73,7 +97,7 @@ func getSuras() []int {
 
 		// skip a sura if it's directory doesn't exist
 		if !isDirExists(dirSura) {
-			fmt.Printf("sura directory `%s` doesn't exist; skipping\n", dirSura)
+			log.Println(col.Red(fmt.Sprintf("sura directory `%s` doesn't exist; skipping\n", dirSura)))
 			continue
 		}
 
@@ -105,20 +129,22 @@ func getSuras() []int {
 
 		// skip a sura if it's incomplete
 		if isSuraIncomplete {
-			fmt.Printf("sura `%d` is incomplete; skipping\n", sura)
+			log.Println(col.Yellow(fmt.Sprintf("sura `%d` is incomplete; skipping\n", sura)))
 			continue
 		}
 
 		suras = append(suras, sura)
-		panics("Error creating contact data file", hel.StrToFile(getFfmpegConcatFilePath(sura), ffmpegConcatData))
+		if err := hel.StrToFile(getFfmpegConcatFilePath(sura), ffmpegConcatData); err != nil {
+			return []int{}, err
+		}
 	}
 
 	wg.Wait()
 	close(c)
 
-	hel.Pl("All input audio files seems valid, creating gapless")
+	hel.Pl("audio files checked, valid sura(s) =>", suras)
 
-	return suras
+	return suras, nil
 }
 
 func validateAyaFile(sura int, aya int) {

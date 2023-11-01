@@ -1,4 +1,4 @@
-module gitlab.com/hamza72x/vbv-to-gapless
+module github.com/hamza72x/vbv-to-gapless
 
 go 1.17
 

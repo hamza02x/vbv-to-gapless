@@ -1,6 +1,7 @@
 package main
 
 import (
+	"log"
 	"os"
 	"os/exec"
 	"path"
@@ -35,34 +36,35 @@ func getPartName(suraOrAya int) string {
 }
 
 // ffprobe -i 001001.mp3 -show_entries format=duration -v quiet -of csv="p=0"
-func getAudioLengthMS(path string) int64 {
+func getAudioLengthMS(path string) (int64, error) {
 
-	dur, err := strconv.ParseFloat(trimSpaces(execute(
-		"ffprobe", "-i "+path+" -show_entries format=duration -v quiet -of csv=p=0",
-	)), 64)
+	args := "-i " + path + " -show_entries format=duration -v quiet -of csv=p=0"
+	timeOut, err := execute("ffprobe", args)
+	if err != nil {
+		return 0, err
+	}
 
-	panics("error in ParseFloat ", err)
+	dur, err := strconv.ParseFloat(trimSpaces(timeOut), 64)
 
-	return int64(dur * 1000)
+	if err != nil {
+		log.Printf("Error in getting audio length, command: ffprobe %s, error: %v", args, err)
+		return 0, err
+	}
+
+	return int64(dur * 1000), nil
 }
 
-func execute(comm string, arg string) string {
+func execute(comm string, arg string) (string, error) {
 	cmd := exec.Command(comm, hel.StrToArr(arg, " ")...)
 
 	out, err := cmd.CombinedOutput()
 
 	if err != nil {
-		panics("Error in execute "+comm+" "+arg, err)
+		log.Printf("Error in executing command: %s %s, error: %v", comm, arg, err)
+		return "", err
 	}
 
-	return string(out)
-}
-
-func panics(title string, err error) {
-	if err != nil {
-		hel.Pl(err)
-		panic("`" + title + "`")
-	}
+	return string(out), nil
 }
 
 func trimSpaces(str string) string {
@@ -93,10 +95,13 @@ func getFfmpegConcatFilePath(sura int) string {
 	return dirOutBuild + "/" + getPartName(sura) + ".txt"
 }
 
-func getAbs(path string) string {
+func getAbs(path string) (string, error) {
 	abs, err := filepath.Abs(path)
-	panics("Error in getting absolute path of "+path, err)
-	return abs
+	if err != nil {
+		log.Printf("Error in getting absolute path, path: %s, error: %v", path, err)
+		return "", err
+	}
+	return abs, nil
 }
 
 func getSuraDir(sura int) string {
