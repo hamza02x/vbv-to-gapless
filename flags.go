@@ -143,8 +143,6 @@ func getSuras() ([]int, error) {
 	wg.Wait()
 	close(c)
 
-	hel.Pl("audio files checked, valid sura(s) =>", suras)
-
 	hel.Pl("incomplete sura(s) =>")
 	for _, sura := range incompleteSuras {
 		fmt.Println(sura)
@@ -152,6 +150,11 @@ func getSuras() ([]int, error) {
 
 	hel.Pl("missing sura(s) =>")
 	for _, sura := range missingSuras {
+		fmt.Println(sura)
+	}
+
+	hel.Pl("valid sura(s) =>")
+	for _, sura := range suras {
 		fmt.Println(sura)
 	}
 
