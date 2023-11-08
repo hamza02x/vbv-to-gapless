@@ -3,7 +3,6 @@ package main
 import (
 	"flag"
 	"fmt"
-	"log"
 	"os"
 	"strconv"
 	"sync"
@@ -80,6 +79,8 @@ func flagExit() {
 func getSuras() ([]int, error) {
 
 	suras := []int{}
+	incompleteSuras := []int{}
+	missingSuras := []int{}
 
 	if !hel.PathExists(dirVbvAudio) {
 		panic("directory `" + dirVbvAudio + "` doesn't exist")
@@ -97,7 +98,7 @@ func getSuras() ([]int, error) {
 
 		// skip a sura if it's directory doesn't exist
 		if !isDirExists(dirSura) {
-			log.Println(col.Red(fmt.Sprintf("sura directory `%s` doesn't exist; skipping\n", dirSura)))
+			missingSuras = append(missingSuras, sura)
 			continue
 		}
 
@@ -129,7 +130,7 @@ func getSuras() ([]int, error) {
 
 		// skip a sura if it's incomplete
 		if isSuraIncomplete {
-			log.Println(col.Yellow(fmt.Sprintf("sura `%d` is incomplete; skipping\n", sura)))
+			incompleteSuras = append(incompleteSuras, sura)
 			continue
 		}
 
@@ -143,6 +144,16 @@ func getSuras() ([]int, error) {
 	close(c)
 
 	hel.Pl("audio files checked, valid sura(s) =>", suras)
+
+	hel.Pl("incomplete sura(s) =>")
+	for _, sura := range incompleteSuras {
+		fmt.Println(sura)
+	}
+
+	hel.Pl("missing sura(s) =>")
+	for _, sura := range missingSuras {
+		fmt.Println(sura)
+	}
 
 	return suras, nil
 }
