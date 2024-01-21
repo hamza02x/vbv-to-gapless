@@ -21,6 +21,7 @@ var (
 	thread                int    // flag
 	isVbvAyaFileInSuraDir bool   // flag
 	createdCount          int
+	isOpusToo             bool
 )
 
 func main() {
@@ -33,6 +34,15 @@ func main() {
 	suras, err := getSuras()
 	if err != nil {
 		log.Fatal(err)
+	}
+
+	// ask continue?
+	fmt.Printf("proceed? (y/n): ")
+	var proceed string
+	fmt.Scanln(&proceed)
+	if proceed != "y" {
+		os.Exit(0)
+		return
 	}
 
 	if err := setDB(path.Join(dirOut, name+".db")); err != nil {
@@ -83,17 +93,19 @@ func concatSuraAudio(sura int) error {
 	hel.Pl("✅ " + strconv.Itoa(createdCount+1) + ". Created: " + col.Green(outMp3File))
 
 	// also create opus version
-	outOpusFile := getGaplessOpusSuraFilePath(sura)
+	if isOpusToo {
+		outOpusFile := getGaplessOpusSuraFilePath(sura)
 
-	hel.Pl("🔪 Creating: " + col.Red(outOpusFile))
-	if _, err := execute("ffmpeg", fmt.Sprintf(
-		"-i %s -c:a libopus -vbr on -compression_level 10 -frame_duration 60 -application audio -v quiet -y %s",
-		outMp3File,
-		outOpusFile,
-	)); err != nil {
-		return err
+		hel.Pl("🔪 Creating: " + col.Red(outOpusFile))
+		if _, err := execute("ffmpeg", fmt.Sprintf(
+			"-i %s -c:a libopus -vbr on -compression_level 10 -frame_duration 60 -application audio -v quiet -y %s",
+			outMp3File,
+			outOpusFile,
+		)); err != nil {
+			return err
+		}
+		hel.Pl("✅ " + strconv.Itoa(createdCount+1) + ". Created: " + col.Green(outOpusFile))
 	}
-	hel.Pl("✅ " + strconv.Itoa(createdCount+1) + ". Created: " + col.Green(outOpusFile))
 
 	createdCount++
 

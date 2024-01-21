@@ -4,8 +4,7 @@ import (
 	"flag"
 	"fmt"
 	"os"
-	"strconv"
-	"sync"
+	"sort"
 	"time"
 
 	col "github.com/hamza72x/go-color"
@@ -19,6 +18,7 @@ func handleFlags() error {
 	flag.StringVar(&dirOut, "o", "", "output directory path (required)")
 	flag.IntVar(&thread, "t", 10, "number of threads")
 	flag.BoolVar(&isVbvAyaFileInSuraDir, "visd", false, "is vbv file in their sura directory? (default false); ex: 2/002001.mp3")
+	flag.BoolVar(&isOpusToo, "opus", false, "also create opus files? (default false)")
 
 	flag.Parse()
 
@@ -79,16 +79,16 @@ func flagExit() {
 func getSuras() ([]int, error) {
 
 	suras := []int{}
-	incompleteSuras := []int{}
 	missingSuras := []int{}
+
+	// key: sura, value: missing ayas
+	missingSuraAya := map[int][]int{}
 
 	if !hel.PathExists(dirVbvAudio) {
 		panic("directory `" + dirVbvAudio + "` doesn't exist")
 	}
 
-	var wg sync.WaitGroup
-	var c = make(chan int, thread)
-	var i = 0
+	totalMissingSuraAya := 0
 
 	for sura := 1; sura <= TOTAL_SURA; sura++ {
 
@@ -106,63 +106,55 @@ func getSuras() ([]int, error) {
 		isSuraIncomplete := false
 
 		for aya := 1; aya <= AYAH_COUNT[sura-1]; aya++ {
+			if isSuraIncomplete {
+				totalMissingSuraAya++
+				missingSuraAya[sura] = append(missingSuraAya[sura], aya)
+				continue
+			}
 
 			vbvAyaPath := getVbvAyaFilePath(sura, aya)
+
 			if !hel.FileExists(vbvAyaPath) {
+				totalMissingSuraAya++
 				isSuraIncomplete = true
-				break
+				if _, ok := missingSuraAya[sura]; !ok {
+					missingSuraAya[sura] = []int{}
+				}
+				missingSuraAya[sura] = append(missingSuraAya[sura], aya)
+				continue
 			}
 
 			ffmpegConcatData += fmt.Sprintf("file '%s'\n", vbvAyaPath)
-
-			wg.Add(1)
-			go func(sura int, aya int) {
-				c <- i
-				validateAyaFile(sura, aya)
-				if i%500 == 0 {
-					hel.Pl("Checking input files: " + strconv.Itoa(i))
-				}
-				<-c
-				wg.Done()
-				i++
-			}(sura, aya)
 		}
 
 		// skip a sura if it's incomplete
-		if isSuraIncomplete {
-			incompleteSuras = append(incompleteSuras, sura)
-			continue
-		}
-
-		suras = append(suras, sura)
-		if err := hel.StrToFile(getFfmpegConcatFilePath(sura), ffmpegConcatData); err != nil {
-			return []int{}, err
+		if !isSuraIncomplete {
+			suras = append(suras, sura)
+			if err := hel.StrToFile(getFfmpegConcatFilePath(sura), ffmpegConcatData); err != nil {
+				return []int{}, err
+			}
 		}
 	}
 
-	wg.Wait()
-	close(c)
+	hel.Pl("missing sura ayas(s) =>")
 
-	hel.Pl("incomplete sura(s) =>")
-	for _, sura := range incompleteSuras {
-		fmt.Println(sura)
+	// sort by sura
+	suraList := []int{}
+	for sura := range missingSuraAya {
+		suraList = append(suraList, sura)
 	}
+	sort.Ints(suraList)
+	for sura := range missingSuraAya {
+		for _, aya := range missingSuraAya[sura] {
+			fmt.Println(getVbvAyaFileName(sura, aya))
+		}
+	}
+	hel.Pl("total missing sura ayas: ", col.Red(totalMissingSuraAya))
 
-	hel.Pl("missing sura(s) =>")
+	hel.Pl("missing full sura(s) =>")
 	for _, sura := range missingSuras {
 		fmt.Println(sura)
 	}
 
-	hel.Pl("valid sura(s) =>")
-	for _, sura := range suras {
-		fmt.Println(sura)
-	}
-
 	return suras, nil
-}
-
-func validateAyaFile(sura int, aya int) {
-	if !hel.FileExists(getVbvAyaFilePath(sura, aya)) {
-		panic("Audio file `" + getVbvAyaFileName(sura, aya) + "` doesn't exist")
-	}
 }
