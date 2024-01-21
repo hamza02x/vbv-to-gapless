@@ -107,13 +107,16 @@ func getSuras() ([]int, error) {
 		isSuraIncomplete := false
 
 		for aya := 1; aya <= AYAH_COUNT[sura-1]; aya++ {
-			if isSuraIncomplete {
-				totalMissingSuraAya++
-				missingSuraAya[sura] = append(missingSuraAya[sura], aya)
-				continue
-			}
 
 			vbvAyaPath := getVbvAyaFilePath(sura, aya)
+
+			if isSuraIncomplete {
+				if !hel.FileExists(vbvAyaPath) {
+					totalMissingSuraAya++
+					missingSuraAya[sura] = append(missingSuraAya[sura], aya)
+				}
+				continue
+			}
 
 			if !hel.FileExists(vbvAyaPath) {
 				totalMissingSuraAya++
