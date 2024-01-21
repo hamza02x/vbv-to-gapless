@@ -22,6 +22,7 @@ var (
 	isVbvAyaFileInSuraDir bool   // flag
 	createdCount          int
 	isOpusToo             bool
+	skipAlreadyExists     bool
 )
 
 func main() {
@@ -81,6 +82,11 @@ func main() {
 func concatSuraAudio(sura int) error {
 	outMp3File := getGaplessMp3SuraFilePath(sura)
 	concatFile := getFfmpegConcatFilePath(sura)
+
+	if skipAlreadyExists && hel.FileExists(outMp3File) {
+		fmt.Println("skipping: " + col.Yellow(outMp3File))
+		return nil
+	}
 
 	hel.Pl("🔪 Creating: " + col.Red(outMp3File))
 	if _, err := execute("ffmpeg", fmt.Sprintf(

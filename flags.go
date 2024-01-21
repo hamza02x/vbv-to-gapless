@@ -19,6 +19,7 @@ func handleFlags() error {
 	flag.IntVar(&thread, "t", 10, "number of threads")
 	flag.BoolVar(&isVbvAyaFileInSuraDir, "visd", false, "is vbv file in their sura directory? (default false); ex: 2/002001.mp3")
 	flag.BoolVar(&isOpusToo, "opus", false, "also create opus files? (default false)")
+	flag.BoolVar(&skipAlreadyExists, "sae", true, "skip if file already exists? (default true)")
 
 	flag.Parse()
 
